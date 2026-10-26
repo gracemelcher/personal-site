@@ -1,0 +1,54 @@
+---
+// A live, scrollable preview of another website.
+// Use in a project file: <Embed url="https://example.com" title="My site" />
+// Some sites block being embedded; if the box stays blank, use a screenshot instead.
+interface Props {
+  url: string;
+  title?: string;
+  height?: number;
+}
+
+const { url, title = 'Embedded website', height = 560 } = Astro.props;
+---
+
+<figure class="embed">
+  <div class="chrome"><i></i><i></i><i></i><span>{url.replace(/^https?:\/\//, '')}</span></div>
+  <iframe src={url} title={title} loading="lazy" style={`height: ${height}px`}></iframe>
+</figure>
+
+<style>
+  .embed {
+    margin: 32px 0;
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    overflow: hidden;
+    background: var(--paper-raised);
+  }
+
+  .chrome {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--line);
+    font-size: 12px;
+    color: var(--ink-faint);
+  }
+
+  .chrome i {
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    background: var(--line);
+  }
+
+  .chrome span {
+    margin-left: 8px;
+  }
+
+  iframe {
+    display: block;
+    width: 100%;
+    border: 0;
+  }
+</style>

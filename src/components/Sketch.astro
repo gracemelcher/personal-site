@@ -1,0 +1,26 @@
+---
+// A hand-drawn image that takes on the current text color, so it can
+// change color on hover. Works with transparent PNGs and SVGs.
+interface Props {
+  src: ImageMetadata;
+  class?: string;
+}
+
+const { src, class: className } = Astro.props;
+---
+
+<span
+  class:list={['sketch', className]}
+  style={`--src: url("${src.src}"); aspect-ratio: ${src.width} / ${src.height};`}
+  aria-hidden="true"
+></span>
+
+<style>
+  .sketch {
+    display: block;
+    width: 100%;
+    background-color: currentColor;
+    -webkit-mask: var(--src) center / contain no-repeat;
+    mask: var(--src) center / contain no-repeat;
+  }
+</style>

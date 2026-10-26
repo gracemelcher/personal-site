@@ -1,0 +1,249 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Sketch from '../components/Sketch.astro';
+import { getProjects, projectUrl } from '../data/projects';
+import { site } from '../site.config';
+
+const projects = await getProjects();
+
+// Spots used for any drawing that doesn't set its own `sketchSpot`.
+const defaultSpots = [
+  { x: 10, y: 20 }, { x: 90, y: 22 }, { x: 12, y: 80 }, { x: 88, y: 78 },
+  { x: 50, y: 8 }, { x: 50, y: 92 }, { x: 4, y: 50 }, { x: 96, y: 50 },
+];
+
+const sketches = projects
+  .filter((p) => p.data.sketch)
+  .map((p, i) => ({
+    project: p,
+    spot: { rotate: 0, size: 110, ...defaultSpots[i % defaultSpots.length], ...p.data.sketchSpot },
+    label: p.data.sketchLabel ?? p.data.title,
+  }))
+  // Labels go on the side away from the name unless a project says otherwise.
+  .map((s) => ({ ...s, side: s.spot.label ?? (s.spot.y < site.nameSpot.y ? 'above' : 'below') }));
+
+const { x, y, size } = site.nameSpot;
+---
+
+<BaseLayout>
+  <section class="container stage-wrap" aria-label="Introduction">
+    <div class="stage">
+      <div class="hello" style={`--x: ${x}%; --y: ${y}%; --size: ${size};`}>
+        <h1 class="name">
+          {site.nameDrawing ? (
+            <>
+              <Sketch src={site.nameDrawing} />
+              <span class="visually-hidden">{site.name}</span>
+            </>
+          ) : (
+            site.name
+          )}
+        </h1>
+      </div>
+
+      <ul class="sketches">
+        {sketches.map(({ project, spot, label, side }, i) => (
+          <li
+            style={`--x: ${spot.x}%; --y: ${spot.y}%; --r: ${spot.rotate}deg; --size: ${spot.size}; --i: ${i};`}
+          >
+            <a href={projectUrl(project)} class:list={['doodle', `side-${side}`]}>
+              <Sketch src={project.data.sketch!} />
+              <span class="label">{label}</span>
+            </a>
+          </li>
+        ))}
+      </ul>
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+  /* Breathing room above and below the name and drawings */
+  .stage-wrap {
+    padding-top: clamp(56px, 10vh, 120px);
+    padding-bottom: clamp(56px, 10vh, 120px);
+  }
+
+  /* The whole arrangement scales with the screen width. Sizes are
+     written as pixels on a wide screen (1040px across) and shrink from there. */
+  .stage {
+    position: relative;
+    container-type: inline-size;
+    aspect-ratio: 2 / 1;
+  }
+
+  .hello,
+  .sketches li {
+    position: absolute;
+    left: var(--x);
+    top: var(--y);
+    width: calc(var(--size) / 1040 * 100cqw);
+  }
+
+  .hello {
+    transform: translate(-50%, -50%);
+    text-align: center;
+    pointer-events: none;
+  }
+
+  .name {
+    margin: 0;
+    color: var(--ink);
+    font-family: var(--font-hand);
+    font-weight: 500;
+    font-size: clamp(56px, 11vw, 132px);
+    line-height: 1;
+    letter-spacing: 0;
+  }
+
+  .sketches {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  .sketches li {
+    transform: translate(-50%, -50%) rotate(var(--r));
+    animation: pop-in 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) backwards;
+    animation-delay: calc(0.15s + var(--i) * 0.08s);
+  }
+
+  .doodle {
+    position: relative;
+    display: block;
+    color: var(--sketch);
+    text-decoration: none;
+    transition: color 0.2s, transform 0.25s ease;
+  }
+
+  /* Soft blob behind the drawing on hover */
+  .doodle::before {
+    content: '';
+    position: absolute;
+    inset: -22%;
+    border-radius: 46% 54% 50% 50% / 55% 45% 55% 45%;
+    background: var(--sketch-glow);
+    opacity: 0;
+    transform: scale(0.7);
+    transition: opacity 0.25s, transform 0.3s ease;
+    z-index: -1;
+  }
+
+  .label {
+    position: absolute;
+    transform: var(--rest) rotate(calc(var(--r) * -1));
+    white-space: nowrap;
+    font-size: 15px;
+    font-weight: 600;
+    letter-spacing: 0.03em;
+    color: var(--accent);
+    opacity: 0;
+    transition: opacity 0.2s, transform 0.25s;
+  }
+
+  /* Label positions: each side sets where the label sits and which way it slides in */
+  .side-below .label { left: 50%; top: 100%; --rest: translate(-50%, 0); --shown: translate(-50%, 8px); }
+  .side-above .label { left: 50%; bottom: 100%; --rest: translate(-50%, 0); --shown: translate(-50%, -8px); }
+  .side-left .label { right: 100%; top: 50%; --rest: translate(0, -50%); --shown: translate(-10px, -50%); }
+  .side-right .label { left: 100%; top: 50%; --rest: translate(0, -50%); --shown: translate(10px, -50%); }
+
+  .doodle:hover,
+  .doodle:focus-visible {
+    color: var(--sketch-hover);
+    transform: scale(1.12) rotate(calc(var(--r) * -1));
+  }
+
+  .doodle:hover::before,
+  .doodle:focus-visible::before {
+    opacity: 1;
+    transform: scale(1);
+  }
+
+  .doodle:hover .label,
+  .doodle:focus-visible .label {
+    opacity: 1;
+    transform: var(--shown) rotate(0deg);
+  }
+
+  .doodle:hover :global(.sketch) {
+    animation: wiggle 0.4s ease-in-out;
+  }
+
+  @keyframes pop-in {
+    from {
+      opacity: 0;
+      transform: translate(-50%, -50%) rotate(var(--r)) scale(0.6);
+    }
+  }
+
+  @keyframes wiggle {
+    25% { transform: rotate(-4deg); }
+    75% { transform: rotate(3deg); }
+  }
+
+  /* On phones, drawings line up in a grid under the name */
+  @media (max-width: 640px) {
+    /* Order: name, then the drawings */
+    .stage-wrap {
+      display: flex;
+      flex-direction: column;
+      padding-top: 64px;
+      padding-bottom: 64px;
+    }
+
+    .stage {
+      display: contents;
+    }
+
+    .hello { order: 1; }
+    .sketches { order: 3; }
+
+    .hello {
+      position: static;
+      width: auto;
+      transform: none;
+    }
+
+    .name :global(.sketch) {
+      width: min(320px, 86vw);
+      margin: 0 auto;
+    }
+
+    .sketches {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 56px 24px;
+      padding: 56px 8px 16px;
+      justify-items: center;
+      align-items: center;
+    }
+
+    .sketches li {
+      position: relative;
+      left: auto;
+      top: auto;
+      width: clamp(64px, calc(var(--size) * 0.75px), 110px);
+      transform: rotate(var(--r));
+    }
+
+    /* Phones: every label sits under its drawing and stays visible */
+    .doodle .label {
+      left: 50%;
+      right: auto;
+      top: 100%;
+      bottom: auto;
+      opacity: 1;
+      font-size: 14px;
+      --rest: translate(-50%, 6px);
+      --shown: translate(-50%, 6px);
+    }
+
+    @keyframes pop-in {
+      from {
+        opacity: 0;
+        transform: rotate(var(--r)) scale(0.6);
+      }
+    }
+  }
+
+</style>

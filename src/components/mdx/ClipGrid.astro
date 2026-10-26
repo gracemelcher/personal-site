@@ -1,0 +1,67 @@
+---
+// Lays out <Clip>s side by side (they stack on phones).
+// <ClipGrid layout="bento"> makes a tile grid where each Clip's `size` sets its shape.
+// <ClipGrid layout="pairs"> makes equal tiles two across; an odd last tile is centered below.
+interface Props {
+  layout?: 'columns' | 'bento' | 'pairs';
+}
+
+const { layout = 'columns' } = Astro.props;
+---
+
+<div class="clip-grid-wrap"><div class:list={['clip-grid', layout !== 'columns' && 'bento', layout === 'pairs' && 'pairs']}><slot /></div></div>
+
+<style>
+  /* Lets the grid measure its own width, wherever it's placed */
+  .clip-grid-wrap {
+    container-type: inline-size;
+  }
+
+  .clip-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(420px, 100%), 1fr));
+    gap: 20px;
+    margin: 16px 0 40px;
+  }
+
+  /* Four columns of roughly 3:2 tiles; "large" tiles keep that shape at 2×2 */
+  .bento {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    /* Tile height follows the column's width (cqw), keeping tiles about 3:2 */
+    grid-auto-rows: calc((100cqw - 36px) / 4 / 1.5);
+    grid-auto-flow: dense;
+    gap: 12px;
+    margin-top: 0;
+  }
+
+  /* Pairs: every tile spans two of the four columns; a lone last tile sits in the middle two */
+  .pairs {
+    grid-auto-rows: calc((100cqw - 12px) / 2 / 1.5);
+  }
+
+  .pairs > :global(figure) {
+    grid-column: span 2;
+    grid-row: span 1;
+  }
+
+  .pairs > :global(figure:last-of-type:nth-of-type(odd)) {
+    grid-column: 2 / span 2;
+  }
+
+  @media (max-width: 700px) {
+    .bento {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      grid-auto-rows: calc((100cqw - 8px) / 2 / 1.5);
+      gap: 8px;
+    }
+
+    /* Phones: pairs become one full-width tile per row */
+    .pairs {
+      grid-auto-rows: calc(100cqw / 1.5);
+    }
+
+    .pairs > :global(figure:last-of-type:nth-of-type(odd)) {
+      grid-column: span 2;
+    }
+  }
+</style>

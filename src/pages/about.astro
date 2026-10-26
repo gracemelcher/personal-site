@@ -1,0 +1,177 @@
+---
+import { Image } from 'astro:assets';
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { Content as Bio } from '../data/about.md';
+import { site } from '../site.config';
+// Your photo. Swap the file to change it.
+import portrait from '../assets/about/me.jpg';
+
+// "Contact me" rows: email first, then the links in site.config.ts → socials.
+const contacts = [
+  { label: 'Email', text: site.email, href: `mailto:${site.email}` },
+  ...site.socials.map((s) => ({
+    label: s.label,
+    text: s.href.replace(/^https?:\/\/(www\.)?/, '').replace(/\/$/, ''),
+    href: s.href,
+  })),
+];
+---
+
+<BaseLayout title="About">
+  <section class="container about">
+    <Image
+      class="portrait"
+      src={portrait}
+      alt={`${site.name} smiling on a gray couch with a laptop, under an orange road bike mounted on the wall`}
+      widths={[300, 600]}
+      sizes="(max-width: 700px) 220px, 300px"
+      loading="eager"
+      fetchpriority="high"
+    />
+
+    <div class="page">
+      <div class="bio">
+        <Bio />
+      </div>
+
+      {site.resume && (
+        <p class="resume">
+          <a class="button" href={site.resume} target="_blank" rel="noopener">Read my résumé ↗</a>
+        </p>
+      )}
+
+      <section class="contact" aria-labelledby="contact-title">
+        <h2 id="contact-title">Contact me</h2>
+        <dl>
+          {contacts.map((c) => (
+            <div>
+              <dt>{c.label}</dt>
+              <dd>
+                <a href={c.href} target={c.href.startsWith('mailto:') ? undefined : '_blank'} rel="noopener">
+                  {c.text}
+                </a>
+              </dd>
+            </div>
+          ))}
+        </dl>
+      </section>
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+  .about {
+    display: grid;
+    grid-template-columns: minmax(180px, 280px) minmax(0, 620px);
+    justify-content: center;
+    gap: clamp(32px, 6vw, 80px);
+    padding-top: 48px;
+  }
+
+  .about > :global(.portrait) {
+    position: sticky;
+    top: 32px;
+    align-self: start;
+    width: 100%;
+    height: auto;
+    border-radius: 4px;
+  }
+
+  .bio {
+    font-size: 18px;
+    line-height: 1.7;
+  }
+
+  .bio :global(p) {
+    margin: 0 0 1.1em;
+  }
+
+  /* Links in the bio look like highlighter marks */
+  .bio :global(a) {
+    text-decoration: none;
+    background: linear-gradient(transparent 58%, var(--highlight) 58%);
+    padding: 0 2px;
+    transition: background 0.25s;
+  }
+
+  .bio :global(a:hover),
+  .bio :global(a:focus-visible) {
+    background: linear-gradient(transparent 0%, var(--highlight) 0%);
+  }
+
+  .resume {
+    margin: 8px 0 0;
+  }
+
+  .contact {
+    margin-top: 64px;
+    padding-top: 24px;
+    border-top: 1px solid var(--line);
+  }
+
+  .contact h2 {
+    margin: 0 0 14px;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+  }
+
+  .contact dl {
+    margin: 0;
+  }
+
+  .contact div {
+    display: grid;
+    grid-template-columns: 96px minmax(0, 1fr);
+    gap: 16px;
+    padding: 6px 0;
+    font-size: 15px;
+  }
+
+  .contact dt {
+    color: var(--ink-soft);
+  }
+
+  .contact dd {
+    margin: 0;
+    overflow-wrap: anywhere;
+  }
+
+  .contact a {
+    text-decoration: none;
+    border-bottom: 1px solid var(--line);
+    transition: color 0.2s, border-color 0.2s;
+  }
+
+  .contact a:hover,
+  .contact a:focus-visible {
+    color: var(--accent);
+    border-color: var(--accent);
+  }
+
+  @media (max-width: 700px) {
+    .about {
+      grid-template-columns: 1fr;
+      padding-top: 16px;
+    }
+
+    .about > :global(.portrait) {
+      position: static;
+      max-width: 220px;
+    }
+
+    .bio {
+      font-size: 17px;
+    }
+
+    .contact {
+      margin-top: 48px;
+    }
+
+    .contact div {
+      grid-template-columns: 80px minmax(0, 1fr);
+    }
+  }
+</style>

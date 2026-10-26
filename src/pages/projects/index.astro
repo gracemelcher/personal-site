@@ -1,0 +1,57 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { getProjects, projectUrl } from '../../data/projects';
+
+// Projects appear in their `order`, then newest first (see src/data/projects.ts).
+const projects = await getProjects();
+---
+
+<BaseLayout title="Projects">
+  <section class="container">
+    <h1 class="visually-hidden">Projects</h1>
+    <ul class="titles">
+      {projects.map((p) => (
+        <li>
+          <a href={projectUrl(p)}>{p.data.title}</a>
+        </li>
+      ))}
+    </ul>
+  </section>
+</BaseLayout>
+
+<style>
+  section {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: calc(100vh - 220px);
+  }
+
+  .titles {
+    list-style: none;
+    margin: 0;
+    padding: 40px 0;
+    text-align: center;
+  }
+
+  .titles li + li {
+    margin-top: clamp(10px, 2vw, 18px);
+  }
+
+  .titles a {
+    font-weight: var(--weight-title);
+    font-size: clamp(30px, 6vw, 64px);
+    line-height: 1.15;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    text-decoration: none;
+    color: var(--ink);
+    transition: color 0.2s;
+  }
+
+  .titles a:hover,
+  .titles a:focus-visible {
+    color: var(--sketch);
+  }
+
+</style>

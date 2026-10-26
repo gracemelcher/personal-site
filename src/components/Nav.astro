@@ -1,0 +1,60 @@
+---
+import { site } from '../site.config';
+
+const path = Astro.url.pathname.replace(/\/$/, '') || '/';
+const initials = site.name
+  .split(' ')
+  .map((w) => w[0])
+  .join('')
+  .toLowerCase();
+---
+
+<header class="nav container">
+  <a class="logo" href="/" aria-label={`${site.name}, home`}>{initials}</a>
+  <nav aria-label="Main">
+    {site.nav.map((item) => (
+      <a href={item.href} aria-current={path.startsWith(item.href) ? 'page' : undefined}>
+        {item.label}
+      </a>
+    ))}
+  </nav>
+</header>
+
+<style>
+  .nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-top: 22px;
+    padding-bottom: 22px;
+  }
+
+  .logo {
+    font-family: var(--font-hand);
+    font-size: 30px;
+    line-height: 1;
+    text-decoration: none;
+  }
+
+  nav {
+    display: flex;
+    gap: clamp(16px, 3vw, 32px);
+  }
+
+  nav a {
+    font-size: 13px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    text-decoration: none;
+    color: var(--ink-soft);
+    padding: 4px 0;
+    border-bottom: 1.5px solid transparent;
+    transition: color 0.2s, border-color 0.2s;
+  }
+
+  nav a:hover,
+  nav a[aria-current='page'] {
+    color: var(--ink);
+    border-color: var(--ink);
+  }
+</style>

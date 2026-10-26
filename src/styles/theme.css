@@ -1,0 +1,116 @@
+/* ─────────────────────────────────────────────────────────────
+   Theme. Every color, font, and spacing value on the site comes
+   from these variables — change them here to restyle everything.
+   ───────────────────────────────────────────────────────────── */
+
+:root {
+  /* Colors */
+  --paper: #fbfaf7;        /* page background */
+  --paper-raised: #ffffff; /* behind clips and embeds */
+  --ink: #1d1c1a;          /* main text and drawings */
+  --ink-soft: #6b6862;     /* secondary text */
+  --ink-faint: #a9a59d;    /* captions, hints */
+  --line: #e6e2da;         /* borders and dividers */
+  --accent: #992576;       /* your purple: links on hover, labels, drawings */
+  --highlight: #fde68a;    /* highlighter marker behind linked words */
+  --sketch: var(--accent);         /* your home page drawings */
+  --sketch-hover: var(--sketch);   /* drawings while hovered */
+  --sketch-glow: color-mix(in srgb, var(--sketch) 12%, transparent); /* blob behind a hovered drawing */
+
+  /* Fonts */
+  /* One font for the whole site. To try another, change the name in --font-body
+     and swap it in the Google Fonts link in src/layouts/BaseLayout.astro. */
+  --font-body: 'Funnel Display', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-hand: 'Caveat', 'Comic Sans MS', cursive; /* only the "gm" mark in the top-left */
+  --weight-title: 800;              /* big all-caps project titles */
+
+  /* Layout */
+  --max-width: 1120px;
+  --gutter: clamp(16px, 4vw, 40px);
+  --radius: 10px;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-size: 17px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+}
+
+a {
+  color: inherit;
+}
+
+h1,
+h2,
+h3 {
+  font-weight: 700;
+  line-height: 1.15;
+  letter-spacing: 0;
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+
+.container {
+  max-width: var(--max-width);
+  margin: 0 auto;
+  padding: 0 var(--gutter);
+}
+
+/* Hidden on screen but read aloud by screen readers */
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+}
+
+.button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border: 1px solid var(--ink);
+  border-radius: 999px;
+  font-size: 14px;
+  text-decoration: none;
+  transition: background 0.2s, color 0.2s;
+}
+
+.button:hover {
+  background: var(--ink);
+  color: var(--paper);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition: none !important;
+    animation: none !important;
+  }
+}

@@ -1,0 +1,204 @@
+---
+// A short silent clip that behaves like a GIF, but only plays when wanted:
+// on hover (or keyboard focus) with a mouse, and while on screen on phones.
+// Put the .mp4 and a .jpg still in public/projects/<project-name>/ and use:
+// <Clip src="/projects/verbs/eject.mp4" poster="/projects/verbs/eject.jpg" caption="Eject" />
+// Inside <ClipGrid layout="bento">, add `label` for a tag in the corner and
+// `size` ("normal", "wide", "tall" or "large") to set the tile's shape.
+// Tiles crop the clip to fill; add fit="contain" to show the whole clip instead.
+// Add `autoplay` to play on a loop the whole time the page is open (good when a
+// page has just one clip). Visitors who ask for less motion still get hover-to-play.
+interface Props {
+  src: string;
+  poster: string;
+  caption?: string;
+  alt?: string;
+  label?: string;
+  size?: 'normal' | 'wide' | 'tall' | 'large';
+  fit?: 'cover' | 'contain';
+  autoplay?: boolean;
+}
+
+const { src, poster, caption, alt, label, size = 'normal', fit = 'cover', autoplay = false } = Astro.props;
+---
+
+<figure class:list={['clip', `size-${size}`, `fit-${fit}`]}>
+  <div class="frame" tabindex="0" data-autoplay={autoplay ? '' : undefined} aria-label={[label, alt ?? caption].filter(Boolean).join(': ') || 'Animated clip'}>
+    <video muted loop playsinline preload="none" poster={poster} aria-hidden="true">
+      <source src={src} type="video/mp4" />
+    </video>
+    {label && <span class="label" aria-hidden="true">{label}</span>}
+    <span class="hint" aria-hidden="true">▶ hover</span>
+  </div>
+  {caption && <figcaption>{caption}</figcaption>}
+</figure>
+
+<script>
+  const canHover = window.matchMedia('(hover: hover)').matches;
+  const calm = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  const play = (frame: Element) => {
+    frame.classList.add('playing');
+    frame.querySelector('video')!.play().catch(() => {});
+  };
+  const pause = (frame: Element) => {
+    frame.classList.remove('playing');
+    frame.querySelector('video')!.pause();
+  };
+  const playWhileVisible = (entries: IntersectionObserverEntry[]) =>
+    entries.forEach((e) => (e.isIntersecting ? play : pause)(e.target));
+
+  // Autoplay clips play only while on screen; phone clips play while crossing the middle
+  // of the screen, so usually one at a time.
+  const onScreen = new IntersectionObserver(playWhileVisible);
+  const midScreen = new IntersectionObserver(playWhileVisible, { rootMargin: '-40% 0px -40% 0px' });
+
+  document.querySelectorAll<HTMLElement>('.clip .frame').forEach((frame) => {
+    if (frame.hasAttribute('data-autoplay') && !calm) {
+      onScreen.observe(frame);
+    } else if (canHover) {
+      frame.addEventListener('mouseenter', () => play(frame));
+      frame.addEventListener('mouseleave', () => pause(frame));
+      frame.addEventListener('focus', () => play(frame));
+      frame.addEventListener('blur', () => pause(frame));
+    } else if (calm) {
+      // Visitors who prefer less motion tap to play and pause.
+      frame.addEventListener('click', () => (frame.classList.contains('playing') ? pause : play)(frame));
+    } else {
+      midScreen.observe(frame);
+    }
+  });
+</script>
+
+<style>
+  .clip {
+    margin: 0;
+  }
+
+  .frame {
+    position: relative;
+    overflow: hidden;
+    border-radius: var(--radius);
+    border: 1px solid var(--line);
+    background: var(--paper-raised);
+    cursor: pointer;
+  }
+
+  video {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+
+  .hint {
+    position: absolute;
+    right: 10px;
+    bottom: 10px;
+    padding: 3px 9px;
+    border-radius: 999px;
+    background: rgb(29 28 26 / 0.7);
+    color: #fff;
+    font-size: 12px;
+    transition: opacity 0.2s;
+  }
+
+  .frame.playing .hint {
+    opacity: 0;
+  }
+
+  /* Autoplay clips start on their own, so no "hover" hint (unless the visitor asked for less motion) */
+  @media (prefers-reduced-motion: no-preference) {
+    .frame[data-autoplay] .hint {
+      display: none;
+    }
+  }
+
+  @media (hover: none) {
+    .hint {
+      display: none;
+    }
+  }
+
+  figcaption {
+    margin-top: 8px;
+    font-size: 14px;
+    color: var(--ink-soft);
+  }
+
+  .label {
+    position: absolute;
+    left: 10px;
+    top: 10px;
+    padding: 3px 10px;
+    border-radius: 999px;
+    background: var(--paper-raised);
+    border: 1px solid var(--line);
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--ink);
+  }
+
+  /* Bento tiles: the clip fills its tile, and the caption slides up over it */
+  :global(.bento) .clip {
+    position: relative;
+    min-height: 0;
+  }
+
+  :global(.bento) .frame {
+    height: 100%;
+    border-radius: 14px;
+  }
+
+  :global(.bento) video {
+    height: 100%;
+    object-fit: cover;
+  }
+
+  :global(.bento) .fit-contain video {
+    object-fit: contain;
+  }
+
+  :global(.bento) figcaption {
+    position: absolute;
+    left: 1px;
+    right: 1px;
+    bottom: 1px;
+    margin: 0;
+    padding: 28px 14px 12px;
+    border-radius: 0 0 14px 14px;
+    background: linear-gradient(transparent, rgb(29 28 26 / 0.72));
+    color: #fff;
+    opacity: 0;
+    transform: translateY(6px);
+    transition: opacity 0.25s, transform 0.25s;
+    pointer-events: none;
+  }
+
+  :global(.bento) .clip:has(.playing) figcaption {
+    opacity: 1;
+    transform: none;
+  }
+
+  :global(.bento) .hint {
+    bottom: auto;
+    top: 10px;
+  }
+
+  :global(.bento) .size-wide { grid-column: span 2; }
+  :global(.bento) .size-tall { grid-row: span 2; }
+  :global(.bento) .size-large { grid-column: span 2; grid-row: span 2; }
+
+  @media (max-width: 700px) {
+    :global(.bento) figcaption {
+      padding: 20px 10px 8px;
+      font-size: 13px;
+      line-height: 1.35;
+    }
+
+    :global(.bento) .label {
+      left: 6px;
+      top: 6px;
+      font-size: 12px;
+    }
+  }
+</style>
