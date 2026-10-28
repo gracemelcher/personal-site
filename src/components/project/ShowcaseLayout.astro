@@ -1,0 +1,239 @@
+---
+// Project page layout: title and details, then the main visual large, then the description.
+import { Image } from 'astro:assets';
+import { projectUrl, type Project } from '../../data/projects';
+import Gallery, { type GalleryItem } from './Gallery.astro';
+
+interface Props {
+  project: Project;
+  next: Project;
+  // The project file's body and the components it may use (Clip, Laptop…)
+  Content: any;
+  components: Record<string, any>;
+  gallery: GalleryItem[];
+}
+
+const { project, next, Content, components, gallery } = Astro.props;
+const { title, description, facts, links, cover, coverAlt, showCover, theme } = project.data;
+// Description text: one paragraph per blank line.
+const paragraphs = (description ?? '').split(/\n\s*\n/).map((p) => p.trim()).filter(Boolean);
+const themeStyle = theme.paper ? `--paper: ${theme.paper}` : undefined;
+---
+
+<article class="project" style={themeStyle}>
+  <header class="intro column">
+    <a class="back" href="/projects">← All projects</a>
+    <h1>{title}</h1>
+
+    {facts.length > 0 && (
+      <dl class="facts">
+        {facts.map((f) => (
+          <div>
+            <dt>{f.label}</dt>
+            <dd>{f.value}</dd>
+          </div>
+        ))}
+      </dl>
+    )}
+
+    {links.length > 0 && (
+      <div class="links">
+        {links.map((l) => (
+          <a href={l.url} target="_blank" rel="noopener">
+            {l.label} ↗
+          </a>
+        ))}
+      </div>
+    )}
+  </header>
+
+  <!-- Shown large: the cover photo, or the page's clips when the cover is hidden -->
+  {showCover ? (
+    <Image class="hero" src={cover} alt={coverAlt} widths={[960, 1600, 2400]} sizes="100vw" loading="eager" />
+  ) : (
+    <div class="hero hero-body">
+      <Content components={components} />
+    </div>
+  )}
+
+  <div class="details column">
+    {paragraphs.map((p) => <p class="description">{p}</p>)}
+
+    {showCover && (
+      <div class="body">
+        <Content components={components} />
+      </div>
+    )}
+
+    <Gallery items={gallery} columns={3} />
+
+    {next.id !== project.id && (
+      <a class="next" href={projectUrl(next)}>
+        <span>Next</span>
+        {next.data.title} →
+      </a>
+    )}
+  </div>
+</article>
+
+<style>
+  /* Title and details, then the main visual large, then the description */
+  .project {
+    padding-bottom: 48px;
+    background: var(--paper);
+  }
+
+  /* The text column shared by the header and everything below the main visual */
+  .column {
+    max-width: calc(880px + 2 * var(--gutter));
+    margin: 0 auto;
+    padding: 0 var(--gutter);
+  }
+
+  .intro {
+    padding-top: 32px;
+    padding-bottom: clamp(28px, 4vw, 44px);
+  }
+
+  .back {
+    display: inline-block;
+    margin-bottom: 28px;
+    font-size: 13px;
+    text-decoration: none;
+    color: var(--ink-soft);
+  }
+
+  .back:hover {
+    color: var(--accent);
+  }
+
+  h1 {
+    margin: 0;
+    font-weight: var(--weight-title);
+    font-size: clamp(32px, 5vw, 56px);
+    line-height: 1.05;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+
+  .facts {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 14px 40px;
+    margin: 24px 0 0;
+  }
+
+  .facts dt {
+    font-size: 11px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+  }
+
+  .facts dd {
+    margin: 2px 0 0;
+    font-size: 14px;
+  }
+
+  .links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 24px;
+    margin-top: 20px;
+  }
+
+  .links a {
+    font-size: 14px;
+    color: var(--ink);
+    text-underline-offset: 3px;
+  }
+
+  .links a:hover {
+    color: var(--accent);
+  }
+
+  /* Most of the window's width with a margin at each side, never taller than most of the screen */
+  .project > :global(.hero) {
+    width: calc(100% - 2 * var(--hero-inset));
+    max-width: 1600px;
+    margin: 0 auto;
+    --hero-inset: clamp(16px, 5vw, 80px);
+  }
+
+  .project > :global(img.hero) {
+    max-height: 85vh;
+    object-fit: cover;
+    border-radius: var(--radius);
+  }
+
+  .hero-body {
+    container-type: inline-size;
+  }
+
+  .hero-body > :global(.clip video) {
+    max-height: 85vh;
+    object-fit: cover;
+  }
+
+  /* A grid of clips gets the site's widest width instead, so tiles don't get huge */
+  .hero-body > :global(.clip-grid-wrap) {
+    max-width: var(--max-width);
+    margin: 0 auto;
+  }
+
+  .details {
+    padding-top: clamp(32px, 5vw, 56px);
+  }
+
+  .description {
+    max-width: 640px;
+    margin: 0;
+    font-size: 18px;
+    line-height: 1.65;
+    color: var(--ink-soft);
+  }
+
+  .description + .description {
+    margin-top: 14px;
+  }
+
+  .body:not(:empty) {
+    margin-top: 40px;
+  }
+
+  .body :global(img),
+  .body :global(video) {
+    width: 100%;
+    max-height: 78vh;
+    object-fit: contain;
+    border-radius: var(--radius);
+  }
+
+
+  .next {
+    display: block;
+    margin-top: 48px;
+    padding-top: 16px;
+    border-top: 1px solid var(--line);
+    font-size: 18px;
+    text-decoration: none;
+  }
+
+  .next span {
+    display: block;
+    font-size: 11px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+  }
+
+  .next:hover {
+    color: var(--accent);
+  }
+
+  @media (max-width: 860px) {
+    .intro {
+      padding-top: 16px;
+    }
+  }
+</style>

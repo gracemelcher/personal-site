@@ -42,6 +42,10 @@ const projects = defineCollection({
       gallery: z
         .array(z.object({ src: image(), alt: z.string().default(''), caption: z.string().optional() }))
         .default([]),
+      // How the project page is arranged:
+      //   side: details in a column beside the images (the default)
+      //   showcase: title and details on top, then one big visual (like a <Laptop>), then the description
+      pageLayout: z.enum(['side', 'showcase']).default('side'),
       // Optional page background color, e.g. { paper: '#f4f1ea' }.
       theme: z.object({ paper: z.string().optional() }).default({}),
 

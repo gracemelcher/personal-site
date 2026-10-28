@@ -1,0 +1,236 @@
+---
+// Project page layout: details in a sticky side column, images scrolling beside them.
+import { Image } from 'astro:assets';
+import { projectUrl, type Project } from '../../data/projects';
+import Gallery, { type GalleryItem } from './Gallery.astro';
+
+interface Props {
+  project: Project;
+  next: Project;
+  // The project file's body and the components it may use (Clip, Laptop…)
+  Content: any;
+  components: Record<string, any>;
+  gallery: GalleryItem[];
+}
+
+const { project, next, Content, components, gallery } = Astro.props;
+const { title, description, facts, links, cover, coverAlt, showCover, theme } = project.data;
+// Description text: one paragraph per blank line.
+const paragraphs = (description ?? '').split(/\n\s*\n/).map((p) => p.trim()).filter(Boolean);
+const themeStyle = theme.paper ? `--paper: ${theme.paper}` : undefined;
+---
+
+<article class="project container" style={themeStyle}>
+  <aside class="side">
+    <a class="back" href="/projects">← All projects</a>
+    <h1>{title}</h1>
+
+    {facts.length > 0 && (
+      <dl class="facts">
+        {facts.map((f) => (
+          <div>
+            <dt>{f.label}</dt>
+            <dd>{f.value}</dd>
+          </div>
+        ))}
+      </dl>
+    )}
+
+    {paragraphs.map((p) => <p class="description">{p}</p>)}
+
+    {links.length > 0 && (
+      <div class="links">
+        {links.map((l) => (
+          <a href={l.url} target="_blank" rel="noopener">
+            {l.label} ↗
+          </a>
+        ))}
+      </div>
+    )}
+
+    {next.id !== project.id && (
+      <a class="next" href={projectUrl(next)}>
+        <span>Next</span>
+        {next.data.title} →
+      </a>
+    )}
+  </aside>
+
+  <div class="media">
+    {showCover && (
+      <Image class="cover" src={cover} alt={coverAlt} widths={[640, 1280]} sizes="(max-width: 860px) 100vw, 640px" loading="eager" />
+    )}
+
+    <div class="body">
+      <Content components={components} />
+    </div>
+
+    <Gallery items={gallery} />
+
+    {next.id !== project.id && (
+      <a class="next next-bottom" href={projectUrl(next)}>
+        <span>Next</span>
+        {next.data.title} →
+      </a>
+    )}
+  </div>
+</article>
+
+<style>
+  /* Two columns: text stays put on the left while images scroll on the right */
+  .project {
+    display: grid;
+    grid-template-columns: minmax(220px, 300px) minmax(0, 640px);
+    justify-content: center;
+    gap: clamp(40px, 6vw, 88px);
+    padding-top: 32px;
+    padding-bottom: 48px;
+    background: var(--paper);
+  }
+
+  .side {
+    position: sticky;
+    top: 32px;
+    align-self: start;
+  }
+
+  .back {
+    display: inline-block;
+    margin-bottom: 28px;
+    font-size: 13px;
+    text-decoration: none;
+    color: var(--ink-soft);
+  }
+
+  .back:hover {
+    color: var(--accent);
+  }
+
+  h1 {
+    margin: 0;
+    font-weight: var(--weight-title);
+    font-size: clamp(28px, 3vw, 38px);
+    line-height: 1.1;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+
+  .facts {
+    margin: 24px 0 0;
+  }
+
+  .facts div + div {
+    margin-top: 12px;
+  }
+
+  .facts dt {
+    font-size: 11px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+  }
+
+  .facts dd {
+    margin: 2px 0 0;
+    font-size: 14px;
+  }
+
+  .description {
+    margin: 22px 0 0;
+    font-size: 16px;
+    line-height: 1.6;
+    color: var(--ink-soft);
+  }
+
+  .description + .description {
+    margin-top: 12px;
+  }
+
+  .links {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-top: 22px;
+  }
+
+  .links a {
+    font-size: 14px;
+    color: var(--ink);
+    text-underline-offset: 3px;
+  }
+
+  .links a:hover {
+    color: var(--accent);
+  }
+
+  .next {
+    display: block;
+    margin-top: 40px;
+    padding-top: 16px;
+    border-top: 1px solid var(--line);
+    font-size: 18px;
+    text-decoration: none;
+  }
+
+  .next span {
+    display: block;
+    font-size: 11px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+  }
+
+  .next:hover {
+    color: var(--accent);
+  }
+
+  .next-bottom {
+    display: none;
+  }
+
+  /* The media column; its width lets clip grids size their tiles */
+  .media {
+    container-type: inline-size;
+    padding-top: 52px;
+  }
+
+  .media > :global(.cover) {
+    width: 100%;
+    margin-bottom: 24px;
+    border-radius: var(--radius);
+  }
+
+  .body :global(img),
+  .body :global(video) {
+    width: 100%;
+    max-height: 78vh;
+    object-fit: contain;
+    border-radius: var(--radius);
+  }
+
+
+  /* Phones and narrow windows: details on top, images below */
+  @media (max-width: 860px) {
+    .project {
+      grid-template-columns: minmax(0, 1fr);
+      gap: 32px;
+      padding-top: 16px;
+    }
+
+    .side {
+      position: static;
+    }
+
+    .media {
+      padding-top: 0;
+    }
+
+    .side .next {
+      display: none;
+    }
+
+    .next-bottom {
+      display: block;
+    }
+  }
+</style>

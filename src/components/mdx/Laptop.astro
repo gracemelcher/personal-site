@@ -1,0 +1,189 @@
+---
+// Shows a clip (or image) playing on a laptop screen, drawn in CSS.
+// Use in a project file:
+// <Laptop caption="Roster">
+//   <Clip autoplay src="/projects/strava/roster.mp4" poster="/projects/strava/roster-poster.jpg" />
+// </Laptop>
+// The screen is MacBook-shaped (16:10). Clips of other shapes are cropped to fill it;
+// add fit="contain" to show the whole clip with black bars instead.
+// `model` picks the laptop's look:
+//   silver       light aluminum, camera dot in the bezel (the default)
+//   space-black  dark aluminum, slim bezels and a camera notch, like a recent MacBook Pro
+//   midnight     deep navy-blue aluminum, like a MacBook Air
+//   classic      older MacBook Pro: thicker black bezel with a chin under the screen
+interface Props {
+  caption?: string;
+  fit?: 'cover' | 'contain';
+  model?: 'silver' | 'space-black' | 'midnight' | 'classic';
+}
+
+const { caption, fit = 'cover', model = 'silver' } = Astro.props;
+---
+
+<figure class:list={['laptop', `model-${model}`]} style={`--screen-fit: ${fit}`}>
+  <div class="device">
+    <div class="lid">
+      <div class="screen"><slot /></div>
+    </div>
+    <div class="base"></div>
+  </div>
+  {caption && <figcaption>{caption}</figcaption>}
+</figure>
+
+<style>
+  .laptop {
+    max-width: 1080px;
+    margin: 0 auto;
+
+    /* Each model below changes only these */
+    --bezel: 1.6cqi;
+    --chin: 2cqi;
+    --rim: #b9b9bd;
+    --glass: #111113;
+    --body-light: #e6e6e8;
+    --body-mid: #c9c9cc;
+    --body-dark: #909094;
+    --groove-dark: #a9a9ad;
+    --groove-light: #d2d2d5;
+  }
+
+  .model-space-black {
+    --bezel: 1cqi;
+    --chin: 1.2cqi;
+    --rim: #3a3a3e;
+    --glass: #050506;
+    --body-light: #56565b;
+    --body-mid: #333337;
+    --body-dark: #1b1b1e;
+    --groove-dark: #1e1e21;
+    --groove-light: #3b3b3f;
+  }
+
+  .model-midnight {
+    --bezel: 1.2cqi;
+    --chin: 1.4cqi;
+    --rim: #3b4252;
+    --glass: #07080b;
+    --body-light: #4a5266;
+    --body-mid: #2e3442;
+    --body-dark: #191d26;
+    --groove-dark: #1d2129;
+    --groove-light: #3d4456;
+  }
+
+  .model-classic {
+    --bezel: 2.6cqi;
+    --chin: 4.2cqi;
+  }
+
+  /* Every size below is a share of the laptop's width (cqi), so it scales as one piece */
+  .device {
+    container-type: inline-size;
+  }
+
+  .lid {
+    position: relative;
+    width: 84cqi;
+    margin: 0 auto;
+    padding: var(--bezel) var(--bezel) var(--chin);
+    border-radius: 2.2cqi 2.2cqi 0.5cqi 0.5cqi;
+    background: var(--glass);
+    /* thin aluminum rim around the black glass */
+    box-shadow: 0 0 0 0.18cqi var(--rim), inset 0 0 0 0.2cqi rgb(255 255 255 / 0.08);
+  }
+
+  /* Camera dot in the top bezel */
+  .lid::before {
+    content: '';
+    position: absolute;
+    z-index: 1;
+    top: calc(var(--bezel) / 2);
+    left: 50%;
+    width: 0.45cqi;
+    height: 0.45cqi;
+    border-radius: 50%;
+    background: #2e2e33;
+    transform: translate(-50%, -50%);
+  }
+
+  /* Recent models: the camera sits in a notch cut into the top of the screen */
+  .model-space-black .lid::before,
+  .model-midnight .lid::before {
+    top: calc(var(--bezel) - 0.1cqi);
+    width: 8cqi;
+    height: 1.9cqi;
+    border-radius: 0 0 0.6cqi 0.6cqi;
+    background: var(--glass);
+    transform: translateX(-50%);
+  }
+
+  .model-space-black .lid::after,
+  .model-midnight .lid::after {
+    content: '';
+    position: absolute;
+    z-index: 2;
+    top: calc(var(--bezel) + 0.6cqi);
+    left: 50%;
+    width: 0.4cqi;
+    height: 0.4cqi;
+    border-radius: 50%;
+    background: #1f2430;
+    transform: translateX(-50%);
+  }
+
+  .screen {
+    aspect-ratio: 16 / 10;
+    overflow: hidden;
+    border-radius: 0.3cqi;
+    background: #000;
+  }
+
+  .base {
+    position: relative;
+    height: 1.7cqi;
+    border-radius: 0 0 5cqi 5cqi / 0 0 1.7cqi 1.7cqi;
+    background: linear-gradient(var(--body-light), var(--body-mid) 55%, var(--body-dark));
+    box-shadow: 0 1.6cqi 2.6cqi -1.2cqi rgb(0 0 0 / 0.35);
+  }
+
+  /* Thumb groove for opening the lid */
+  .base::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 50%;
+    width: 13cqi;
+    height: 0.75cqi;
+    border-radius: 0 0 0.9cqi 0.9cqi;
+    background: linear-gradient(var(--groove-dark), var(--groove-light));
+    transform: translateX(-50%);
+  }
+
+  /* The clip fills the screen edge to edge, without its own frame */
+  .screen :global(.clip),
+  .screen :global(.frame) {
+    height: 100%;
+  }
+
+  .screen :global(.frame) {
+    border: 0;
+    border-radius: 0;
+    background: #000;
+  }
+
+  .screen :global(video),
+  .screen :global(img) {
+    width: 100%;
+    height: 100%;
+    max-height: none;
+    object-fit: var(--screen-fit);
+    border-radius: 0;
+  }
+
+  figcaption {
+    margin-top: 16px;
+    font-size: 14px;
+    color: var(--ink-soft);
+    text-align: center;
+  }
+</style>

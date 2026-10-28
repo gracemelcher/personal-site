@@ -6,20 +6,22 @@ description: |
 date: 2026-08-15
 order: 3
 facts:
-  - { label: Date, value: August 2026 }
   - { label: Category, value: Data Visualization }
-  - { label: Technologies, value: 'Python, p5.js' }
+  - { label: Technologies, value: 'Python, p5.js, Figma, Claude Code' }
 cover: ./cover.jpg
 showCover: false
+pageLayout: showcase
 coverAlt: A dark map of the United States with dotted message paths running between family members' cities
 sketch: ./sketch.png
 sketchSpot: { x: 26.2, y: 53.8, rotate: 0, size: 104 }
 sketchLabel: family talk
 ---
 
-<Clip
-  autoplay
-  src="/projects/family-talk/family-talk.mp4"
-  poster="/projects/family-talk/poster.jpg"
-  alt="Family members' circles grow and trade messages month by month, then move onto a US map, then a split-flap board ranks who sent and received the most texts"
-/>
+<Laptop model="space-black" fit="contain">
+  <Clip
+    autoplay
+    src="/projects/family-talk/family-talk.mp4"
+    poster="/projects/family-talk/poster.jpg"
+    alt="Family members' circles grow and trade messages month by month, then move onto a US map, then a split-flap board ranks who sent and received the most texts"
+  />
+</Laptop>

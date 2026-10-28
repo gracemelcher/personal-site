@@ -1,0 +1,135 @@
+---
+// Photos in a pinboard; click one to see it larger.
+import { Image } from 'astro:assets';
+
+export interface GalleryItem {
+  src: ImageMetadata;
+  alt: string;
+  caption?: string;
+  // The enlarged version's URL
+  full: string;
+}
+
+interface Props {
+  items: GalleryItem[];
+  columns?: number;
+}
+
+const { items, columns = 2 } = Astro.props;
+---
+
+{items.length > 0 && (
+  <>
+    <section class="gallery" aria-label="Gallery">
+      {items.map((item) => (
+        <figure>
+          <button type="button" data-full={item.full} data-alt={item.alt} aria-label={`Enlarge ${item.alt || 'image'}`}>
+            <Image src={item.src} alt={item.alt} widths={[320, 640]} sizes="(max-width: 860px) 50vw, 310px" />
+          </button>
+          {item.caption && <figcaption>{item.caption}</figcaption>}
+        </figure>
+      ))}
+    </section>
+
+    <dialog class="lightbox" id="lightbox">
+      <form method="dialog"><button class="close" aria-label="Close">×</button></form>
+      <img alt="" />
+    </dialog>
+  </>
+)}
+
+<script>
+  const dialog = document.getElementById('lightbox') as HTMLDialogElement | null;
+  const img = dialog?.querySelector('img');
+  document.querySelectorAll<HTMLButtonElement>('[data-full]').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      if (!dialog || !img) return;
+      img.src = btn.dataset.full!;
+      img.alt = btn.dataset.alt ?? '';
+      dialog.showModal();
+    });
+  });
+  // Click outside the image to close.
+  dialog?.addEventListener('click', (e) => {
+    if (e.target === dialog) dialog.close();
+  });
+</script>
+
+<style define:vars={{ columns }}>
+  /* Photos keep their own shape and stack in columns, like a pinboard */
+  .gallery {
+    columns: var(--columns);
+    margin-top: 24px;
+    column-gap: 14px;
+  }
+
+  .gallery figure {
+    margin: 0 0 14px;
+    break-inside: avoid;
+  }
+
+  .gallery button {
+    display: block;
+    width: 100%;
+    padding: 0;
+    border: 0;
+    background: none;
+    cursor: zoom-in;
+    border-radius: var(--radius);
+    overflow: hidden;
+  }
+
+  .gallery :global(img) {
+    width: 100%;
+    transition: transform 0.4s ease;
+  }
+
+  .gallery button:hover :global(img) {
+    transform: scale(1.03);
+  }
+
+  figcaption {
+    margin-top: 6px;
+    font-size: 13px;
+    color: var(--ink-soft);
+  }
+
+  @media (max-width: 860px) {
+    .gallery {
+      columns: 2;
+    }
+  }
+
+  .lightbox {
+    max-width: 92vw;
+    max-height: 92vh;
+    padding: 0;
+    border: 0;
+    border-radius: var(--radius);
+    background: transparent;
+    overflow: visible;
+  }
+
+  .lightbox::backdrop {
+    background: rgb(0 0 0 / 0.8);
+  }
+
+  .lightbox img {
+    max-width: 92vw;
+    max-height: 92vh;
+    width: auto;
+    border-radius: var(--radius);
+  }
+
+  .close {
+    position: absolute;
+    top: -40px;
+    right: 0;
+    border: 0;
+    background: none;
+    color: #fff;
+    font-size: 32px;
+    line-height: 1;
+    cursor: pointer;
+  }
+</style>
